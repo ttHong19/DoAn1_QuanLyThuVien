@@ -7,11 +7,13 @@
 
     <title>Quản lý thư viện</title>
 
+    <link rel="icon" type="image/png" sizes="32x32" href="icon.png">
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <!-- CSS của trang -->
-    <link rel="stylesheet" href="frontend/style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -25,8 +27,7 @@
         <aside class="sidebar">
 
             <div class="logo">
-                <i class="fa-solid fa-book-open"></i>
-                <span>QUẢN LÝ THƯ VIỆN</span>
+                <img src="H_logo.png" alt="Logo thư viện">
             </div>
 
             <nav class="menu">
@@ -81,13 +82,27 @@
                         <i class="fa-solid fa-bars"></i>
                     </button>
 
-                    <div class="top-search">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <span id="topTitle">Trang chủ</span>
+                    <div class="top-search" id="topSearchBox">
+                        <i class="fa-solid fa-magnifying-glass" id="topSearchIcon"></i>
+                        <input type="text" id="topSearchInput" placeholder="Tìm nhanh sách, độc giả..."
+                            autocomplete="off">
+                        <div class="top-search-menu" id="topSearchMenu">
+                            <div class="top-search-title">Tìm nhanh</div>
+                            <button type="button" data-top-search-type="books">
+                                <i class="fa-solid fa-book"></i> Tìm sách
+                            </button>
+                            <button type="button" data-top-search-type="readers">
+                                <i class="fa-solid fa-users"></i> Tìm độc giả
+                            </button>
+                        </div>
                     </div>
 
                 </div>
 
+                <div class="top-logo">
+                    <img src="Favicion.png" alt="Logo thư viện">
+                    <span>Sách tốt</span>
+                </div>
 
                 <div class="admin-area">
                     <button class="notification">
@@ -463,85 +478,6 @@
                         </div>
 
                     </div>
-
-
-                    <!-- 4 CHỨC NĂNG NHANH -->
-
-                    <div class="quick-grid">
-
-                        <a href="#" class="quick-card blue" data-page-link="books">
-
-                            <div class="quick-icon">
-                                <i class="fa-solid fa-book-open"></i>
-                            </div>
-
-                            <div class="quick-content">
-                                <h3>Quản lý sách</h3>
-                                <p>
-                                    Thêm, sửa, xóa và quản lý thông tin sách.
-                                </p>
-                            </div>
-
-                            <i class="fa-solid fa-arrow-right quick-arrow"></i>
-
-                        </a>
-
-
-                        <a href="#" class="quick-card green" data-page-link="readers">
-
-                            <div class="quick-icon">
-                                <i class="fa-solid fa-user"></i>
-                            </div>
-
-                            <div class="quick-content">
-                                <h3>Quản lý độc giả</h3>
-                                <p>
-                                    Quản lý thông tin độc giả, thẻ độc giả.
-                                </p>
-                            </div>
-
-                            <i class="fa-solid fa-arrow-right quick-arrow"></i>
-
-                        </a>
-
-
-                        <a href="#" class="quick-card orange" data-page-link="borrow">
-
-                            <div class="quick-icon">
-                                <i class="fa-solid fa-arrows-rotate"></i>
-                            </div>
-
-                            <div class="quick-content">
-                                <h3>Mượn - Trả</h3>
-                                <p>
-                                    Lập phiếu mượn, trả sách, quản lý quá hạn.
-                                </p>
-                            </div>
-
-                            <i class="fa-solid fa-arrow-right quick-arrow"></i>
-
-                        </a>
-
-
-                        <a href="#" class="quick-card purple" data-page-link="search">
-
-                            <div class="quick-icon">
-                                <i class="fa-solid fa-magnifying-glass"></i>
-                            </div>
-
-                            <div class="quick-content">
-                                <h3>Tra cứu</h3>
-                                <p>
-                                    Tìm kiếm sách, tìm kiếm độc giả.
-                                </p>
-                            </div>
-
-                            <i class="fa-solid fa-arrow-right quick-arrow"></i>
-
-                        </a>
-
-                    </div>
-
                 </div>
 
 
@@ -890,7 +826,7 @@
     </div>
 
 
-    <script src="frontend/script.js"></script>
+    <script src="script.js"></script>
 
 </body>
 
