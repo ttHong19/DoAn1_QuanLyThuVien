@@ -235,9 +235,13 @@ menuToggle.addEventListener(
     "click",
     function () {
 
-        sidebar.classList.toggle(
-            "open"
-        );
+        // Máy tính: đóng/mở sidebar. Điện thoại: hiện/ẩn sidebar.
+        if (window.innerWidth <= 800) {
+            sidebar.classList.toggle("open");
+        } else {
+            sidebar.classList.toggle("collapsed");
+            document.querySelector(".main").classList.toggle("sidebar-collapsed");
+        }
 
     }
 );
@@ -276,6 +280,67 @@ searchTypes.forEach(function (button) {
         }
     );
 
+});
+
+
+// ==================================================
+// TÌM KIẾM NHANH TRÊN TOPBAR
+// Ô này chỉ là tìm nhanh; không tự nhảy sang trang Tra cứu.
+// Khi chọn "Tìm sách" hoặc "Tìm độc giả" mới mở Tra cứu.
+// ==================================================
+
+const topSearchBox = document.getElementById("topSearchBox");
+const topSearchInput = document.getElementById("topSearchInput");
+const topSearchIcon = document.getElementById("topSearchIcon");
+const topSearchMenu = document.getElementById("topSearchMenu");
+const topSearchChoices = document.querySelectorAll("[data-top-search-type]");
+
+function openTopSearchMenu() {
+    topSearchMenu.classList.add("show");
+}
+
+function closeTopSearchMenu() {
+    topSearchMenu.classList.remove("show");
+}
+
+topSearchInput.addEventListener("focus", openTopSearchMenu);
+topSearchIcon.addEventListener("click", function () {
+    topSearchInput.focus();
+    openTopSearchMenu();
+});
+
+topSearchInput.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        openTopSearchMenu();
+    }
+});
+
+topSearchChoices.forEach(function (button) {
+    button.addEventListener("click", function () {
+        const keyword = topSearchInput.value.trim();
+        const type = button.dataset.topSearchType;
+
+        showPage("search");
+
+        const searchInput = document.getElementById("searchInput");
+        if (searchInput) {
+            searchInput.value = keyword;
+        }
+
+        document.querySelectorAll(".search-type").forEach(function (item) {
+            item.classList.toggle("active", item.dataset.type === type);
+        });
+
+        closeTopSearchMenu();
+        if (searchInput) searchInput.focus();
+    });
+});
+
+document.addEventListener("click", function (event) {
+    if (!topSearchBox.contains(event.target)) {
+        closeTopSearchMenu();
+    }
 });
 
 
