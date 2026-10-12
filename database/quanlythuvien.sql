@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th9 30, 2026 lúc 07:27 PM
+-- Thời gian đã tạo: Th10 12, 2026 lúc 11:46 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -28,8 +28,8 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `chitietmuon` (
-  `MaPhieu` int(11) NOT NULL,
-  `MaSach` int(11) NOT NULL,
+  `MaPhieu` varchar(20) NOT NULL,
+  `MaSach` varchar(20) NOT NULL,
   `SoLuong` int(11) NOT NULL DEFAULT 1,
   `NgayTra` date DEFAULT NULL,
   `TrangThai` varchar(30) NOT NULL DEFAULT 'Đang mượn'
@@ -42,7 +42,7 @@ CREATE TABLE `chitietmuon` (
 --
 
 CREATE TABLE `docgia` (
-  `MaDocGia` int(11) NOT NULL,
+  `MaDocGia` varchar(20) NOT NULL,
   `HoTen` varchar(150) NOT NULL,
   `NgaySinh` date DEFAULT NULL,
   `GioiTinh` varchar(10) DEFAULT NULL,
@@ -55,8 +55,8 @@ CREATE TABLE `docgia` (
 --
 
 INSERT INTO `docgia` (`MaDocGia`, `HoTen`, `NgaySinh`, `GioiTinh`, `SDT`, `LoaiDocGia`) VALUES
-(1, 'Nguyễn Văn An', '2005-05-12', 'Nam', '0900000001', 'Sinh viên'),
-(2, 'Trần Thị Mai', '2005-08-20', 'Nữ', '0900000002', 'Sinh viên');
+('DG001', 'Nguyễn Văn An', '2005-05-12', 'Nam', '0900000001', 'Sinh viên'),
+('DG002', 'Trần Thị Mai', '2005-08-20', 'Nữ', '0900000002', 'Sinh viên');
 
 -- --------------------------------------------------------
 
@@ -65,8 +65,8 @@ INSERT INTO `docgia` (`MaDocGia`, `HoTen`, `NgaySinh`, `GioiTinh`, `SDT`, `LoaiD
 --
 
 CREATE TABLE `phieumuon` (
-  `MaPhieu` int(11) NOT NULL,
-  `MaDocGia` int(11) NOT NULL,
+  `MaPhieu` varchar(20) NOT NULL,
+  `MaDocGia` varchar(20) NOT NULL,
   `NgayMuon` date NOT NULL,
   `HanTra` date NOT NULL,
   `TrangThai` varchar(30) NOT NULL DEFAULT 'Đang mượn'
@@ -79,9 +79,9 @@ CREATE TABLE `phieumuon` (
 --
 
 CREATE TABLE `sach` (
-  `MaSach` int(11) NOT NULL,
+  `MaSach` varchar(20) NOT NULL,
   `TenSach` varchar(200) NOT NULL,
-  `MaTacGia` int(11) NOT NULL,
+  `MaTacGia` varchar(20) NOT NULL,
   `NXB` varchar(150) DEFAULT NULL,
   `NamXB` int(11) DEFAULT NULL,
   `TheLoai` varchar(100) DEFAULT NULL,
@@ -93,9 +93,9 @@ CREATE TABLE `sach` (
 --
 
 INSERT INTO `sach` (`MaSach`, `TenSach`, `MaTacGia`, `NXB`, `NamXB`, `TheLoai`, `SoLuong`) VALUES
-(1, 'Mắt biếc', 1, 'Nhà xuất bản Trẻ', 1990, 'Tiểu thuyết', 10),
-(2, 'Lão Hạc', 2, 'Nhà xuất bản Văn học', 1943, 'Truyện ngắn', 8),
-(3, 'Harry Potter và Hòn đá Phù thủy', 3, 'Bloomsbury', 1997, 'Fantasy', 6);
+('S001', 'Mắt biếc', 'TG001', 'Nhà xuất bản Trẻ', 1990, 'Tiểu thuyết', 10),
+('S002', 'Lão Hạc', 'TG002', 'Nhà xuất bản Văn học', 1943, 'Truyện ngắn', 8),
+('S003', 'Harry Potter và Hòn đá Phù thủy', 'TG003', 'Bloomsbury', 1997, 'Fantasy', 6);
 
 -- --------------------------------------------------------
 
@@ -104,7 +104,7 @@ INSERT INTO `sach` (`MaSach`, `TenSach`, `MaTacGia`, `NXB`, `NamXB`, `TheLoai`, 
 --
 
 CREATE TABLE `tacgia` (
-  `MaTacGia` int(11) NOT NULL,
+  `MaTacGia` varchar(20) NOT NULL,
   `TenTacGia` varchar(150) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -113,9 +113,9 @@ CREATE TABLE `tacgia` (
 --
 
 INSERT INTO `tacgia` (`MaTacGia`, `TenTacGia`) VALUES
-(1, 'Nguyễn Nhật Ánh'),
-(2, 'Nam Cao'),
-(3, 'J. K. Rowling');
+('TG001', 'Nguyễn Nhật Ánh'),
+('TG002', 'Nam Cao'),
+('TG003', 'J. K. Rowling');
 
 --
 -- Chỉ mục cho các bảng đã đổ
@@ -153,34 +153,6 @@ ALTER TABLE `sach`
 --
 ALTER TABLE `tacgia`
   ADD PRIMARY KEY (`MaTacGia`);
-
---
--- AUTO_INCREMENT cho các bảng đã đổ
---
-
---
--- AUTO_INCREMENT cho bảng `docgia`
---
-ALTER TABLE `docgia`
-  MODIFY `MaDocGia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT cho bảng `phieumuon`
---
-ALTER TABLE `phieumuon`
-  MODIFY `MaPhieu` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT cho bảng `sach`
---
-ALTER TABLE `sach`
-  MODIFY `MaSach` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT cho bảng `tacgia`
---
-ALTER TABLE `tacgia`
-  MODIFY `MaTacGia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Các ràng buộc cho các bảng đã đổ
