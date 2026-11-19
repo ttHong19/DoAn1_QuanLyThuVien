@@ -1043,6 +1043,10 @@ th {
     border-left-color: #2785bd;
 }
 
+.purple-border {
+    border-left-color: #7552c5;
+}
+
 .orange-border {
     border-left-color: #e99a2c;
 }
@@ -1057,6 +1061,10 @@ th {
 
 .blue-border>i {
     color: #2785bd;
+}
+
+.purple-border>i {
+    color: #7552c5;
 }
 
 .orange-border>i {
@@ -1318,3 +1326,156 @@ footer {
   background: #e8edf0;
   margin: 5px 0;
 }
+
+/* Hiệu ứng cho các thẻ thống kê Mượn - Trả */
+.borrow-info {
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+/* Khi rê chuột */
+.borrow-info:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
+}
+
+/* Khi đang được chọn */
+.borrow-info.active-filter {
+    transform: translateY(-2px);
+}
+
+.borrow-info.purple-border.active-filter {
+    background-color: #f3effc;
+    box-shadow: 0 0 0 2px #7552c5,
+                0 5px 15px rgba(117, 82, 197, 0.18);
+}
+
+.borrow-info.orange-border.active-filter {
+    background-color: #fdf6ec;
+    box-shadow: 0 0 0 2px #e99a2c,
+                0 5px 15px rgba(233, 154, 44, 0.18);
+}
+
+.borrow-info.red-border.active-filter {
+    background-color: #fdf0f0;
+    box-shadow: 0 0 0 2px #dc6262,
+                0 5px 15px rgba(220, 98, 98, 0.18);
+}
+
+/* ==================================================
+   AUTOCOMPLETE DROPDOWN (GỢI Ý TÌM KIẾM KIỂU GOOGLE)
+================================================== */
+.autocomplete-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    background: #ffffff;
+    border: 1px solid #d5e0e8;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(19, 44, 64, 0.14);
+    z-index: 9999;
+    display: none;
+}
+
+.autocomplete-dropdown.show {
+    display: block;
+}
+
+.autocomplete-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.15s ease;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.active {
+    background: #eef6fc;
+}
+
+.ac-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ac-main strong {
+    font-size: 12px;
+    color: #2785bd;
+}
+
+.ac-main span {
+    font-size: 13px;
+    color: #263b4b;
+}
+
+.ac-meta {
+    font-size: 11px;
+    color: #19aa78;
+    background: #e6f7f0;
+    padding: 2px 7px;
+    border-radius: 99px;
+    white-space: nowrap;
+}
+
+.autocomplete-empty {
+    padding: 12px;
+    text-align: center;
+    font-size: 12px;
+    color: #738593;
+}
+
+/* ==================================================
+   THÔNG TIN TÀI KHOẢN & CÀI ĐẶT
+================================================== */
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.settings-form .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.settings-form label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #263b4b;
+}
+
+.settings-form input {
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid #d7e1eb;
+    border-radius: 7px;
+    font-size: 13px;
+    color: #263b4b;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.settings-form input:focus {
+    border-color: #2785bd;
+}
+
+/* Khi thẻ đang được chọn c2
+.borrow-info.active-filter {
+    filter: brightness(0.88);
+    transform: translateY(-2px);
+    box-shadow: 0 0 0 2px rgba(40, 90, 130, 0.35),
+                0 5px 15px rgba(0, 0, 0, 0.15);
+} */

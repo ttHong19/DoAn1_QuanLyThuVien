@@ -1,60 +1,133 @@
 "use strict";
 
 /* =====================================================
-   1. DỮ LIỆU MẪU
+   1. ket noi voi bang sach mysql
 ===================================================== */
 
-let books = [
-  {
-    id: "S001",
-    name: "Lập trình Java cơ bản",
-    author: "Nguyễn Văn A",
-    publisher: "NXB Giáo dục",
-    year: 2023,
-    category: "Công nghệ thông tin",
-    quantity: 10,
-  },
-  {
-    id: "S002",
-    name: "Cơ sở dữ liệu",
-    author: "Trần Văn B",
-    publisher: "NXB Đại học",
-    year: 2024,
-    category: "Công nghệ thông tin",
-    quantity: 8,
-  },
-  {
-    id: "S003",
-    name: "Mạng máy tính",
-    author: "Lê Văn C",
-    publisher: "NXB Giáo dục",
-    year: 2022,
-    category: "Mạng máy tính",
-    quantity: 6,
-  },
-];
+let books = [];
 
-let readers = [
-  {
-    id: "DG001",
-    name: "Nguyễn Thị Hoa",
-    birthday: "2005-03-15",
-    gender: "Nữ",
-    phone: "0987654321",
-    type: "Sinh viên",
-  },
-  {
-    id: "DG002",
-    name: "Trần Văn Nam",
-    birthday: "2004-08-20",
-    gender: "Nam",
-    phone: "0912345678",
-    type: "Sinh viên",
-  },
-];
+async function fetchBooks() {
+  try {
+    const res = await fetch(API_BOOKS);
+    books = await res.json();
+    renderBooks();
+    updateDashboard();
+  } catch (err) {
+    console.error(err);
+    notify("Chưa kết nối được Backend Java (cổng 8080)!", false);
+  }
+}
+/* =====================================================
+   2. ket noi voi bang doc gia mysql
+===================================================== */
+// const API_LOANS = "http://localhost:8080/api/loans";
+const BASE_API =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
+    ? "http://localhost:8080"
+    : "https://waters-polo-entries-health.trycloudflare.com";
+
+const API_BOOKS = `${BASE_API}/api/books`;
+const API_READERS = `${BASE_API}/api/readers`;
+const API_LOANS = `${BASE_API}/api/loans`;
+const API_AUTHORS = `${BASE_API}/api/authors`;
+const API_LOAN_DETAILS = `${BASE_API}/api/loan-details`;
+
+let readers = [];
+
+async function fetchReaders() {
+  try {
+    const res = await fetch(API_READERS);
+    readers = await res.json();
+    renderReaders();
+    updateDashboard();
+  } catch (err) {
+    console.error("Lỗi tải danh sách độc giả:", err);
+  }
+}
 
 let loans = [];
-let nextLoanNumber = 1;
+let loanFilter = "all";
+
+let authors = [];
+
+async function fetchAuthors() {
+  try {
+    const res = await fetch(API_AUTHORS);
+    authors = await res.json();
+  } catch (err) {
+    console.error("Lỗi tải danh sách tác giả:", err);
+  }
+}
+
+async function fetchLoans() {
+  try {
+    const res = await fetch(API_LOANS);
+    loans = await res.json();
+    renderLoans();
+    updateDashboard();
+  } catch (err) {
+    console.error("Lỗi tải danh sách phiếu mượn:", err);
+  }
+}
+
+let loanDetails = [];
+
+async function fetchLoanDetails() {
+  try {
+    const res = await fetch(API_LOAN_DETAILS);
+    loanDetails = await res.json();
+    renderDashboardLoanDetails();
+  } catch (err) {
+    console.error("Lỗi tải chi tiết mượn:", err);
+  }
+}
+
+function renderDashboardLoanDetails() {
+  const tbody = $("#loanTableBody");
+  if (!tbody) return;
+
+  if (!loanDetails.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6">
+          <div class="empty-state">
+            <div class="empty-icon">
+              <i class="fa-solid fa-box-open"></i>
+            </div>
+            <p>Hiện tại chưa có dữ liệu chi tiết mượn.</p>
+          </div>
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = loanDetails
+    .map(
+      (item) => `
+        <tr>
+          <td><strong>${escapeHTML(item.loanId)}</strong></td>
+          <td>${escapeHTML(item.bookId)}</td>
+          <td>${escapeHTML(item.bookName)}</td>
+          <td>${item.quantity}</td>
+          <td>${escapeHTML(item.returnDate || "—")}</td>
+          <td>
+            <span style="
+              padding: 3px 9px;
+              border-radius: 12px;
+              font-size: 11px;
+              font-weight: 600;
+              background: ${item.status === "Đã trả" ? "#e6f7f1" : "#fff4e5"};
+              color: ${item.status === "Đã trả" ? "#19aa78" : "#e67e22"};
+            ">
+              ${escapeHTML(item.status)}
+            </span>
+          </td>
+        </tr>
+      `,
+    )
+    .join("");
+}
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -81,6 +154,35 @@ function today() {
   const date = new Date();
   const offset = date.getTimezoneOffset();
   return new Date(date.getTime() - offset * 60000).toISOString().slice(0, 10);
+}
+
+function generateAutoId(prefix, list) {
+  const datePart = today().replaceAll("-", ""); // VD: "20261117"
+  const pattern = `${prefix}-${datePart}-`;
+
+  let maxStt = 0;
+  list.forEach((item) => {
+    const id = String(item.id || "");
+    if (id.startsWith(pattern)) {
+      const stt = parseInt(id.slice(pattern.length), 10);
+      if (!isNaN(stt) && stt > maxStt) {
+        maxStt = stt;
+      }
+    }
+  });
+
+  const nextStt = String(maxStt + 1).padStart(3, "0"); // 1 -> "001", 2 -> "002"
+  return `${pattern}${nextStt}`;
+}
+
+function addDays(dateStr, days) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  date.setDate(date.getDate() + days);
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 function notify(message, success = true) {
@@ -121,6 +223,8 @@ const pageTitles = {
   readers: "Quản lý độc giả",
   borrow: "Mượn - Trả",
   search: "Tra cứu",
+  account: "Thông tin tài khoản",
+  settings: "Cài đặt",
 };
 
 function showPage(pageName) {
@@ -164,7 +268,17 @@ function updateDashboard() {
 
   const borrowedBooks = activeLoans.reduce(
     (sum, loan) =>
-      sum + loan.items.reduce((count, item) => count + item.quantity, 0),
+      sum +
+      loan.items.reduce((count, item) => count + Number(item.quantity || 0), 0),
+    0,
+  );
+
+  const returnedLoans = loans.filter((loan) => loan.status === "Đã trả");
+
+  const returnedBooks = returnedLoans.reduce(
+    (sum, loan) =>
+      sum +
+      loan.items.reduce((count, item) => count + Number(item.quantity || 0), 0),
     0,
   );
 
@@ -172,6 +286,7 @@ function updateDashboard() {
     totalBooks,
     totalReaders,
     borrowedBooks,
+    returnedBooks,
     loanSlips: loans.length,
     systemBooks: totalBooks,
     systemReaders: totalReaders,
@@ -348,9 +463,10 @@ function openModal({ title, fields, initial = {}, onSubmit }) {
 function renderBooks(keyword = $("#bookSearch")?.value || "") {
   const term = keyword.trim().toLowerCase();
 
+  // SỬA DÒNG NÀY: Thêm book.authorId để gõ "TG001" cũng tìm ra sách
   const rows = books.filter((book) =>
-    [book.id, book.name, book.author, book.publisher, book.category].some(
-      (value) => String(value).toLowerCase().includes(term),
+    [book.id, book.name, book.author, book.authorId, book.publisher, book.category].some(
+      (value) => String(value || "").toLowerCase().includes(term),
     ),
   );
 
@@ -384,7 +500,8 @@ function renderBooks(keyword = $("#bookSearch")?.value || "") {
                       <tr>
                         <td>${escapeHTML(book.id)}</td>
                         <td>${escapeHTML(book.name)}</td>
-                        <td>${escapeHTML(book.author)}</td>
+                        <!-- SỬA DÒNG NÀY: Hiện kèm (TG001) ngay cạnh tên tác giả -->
+                        <td>${escapeHTML(book.author)} <small style="color:#738593">(${escapeHTML(book.authorId || "")})</small></td>
                         <td>${escapeHTML(book.publisher)}</td>
                         <td>${book.year}</td>
                         <td>${escapeHTML(book.category)}</td>
@@ -428,21 +545,24 @@ function renderBooks(keyword = $("#bookSearch")?.value || "") {
 }
 
 function openBookForm(book = null) {
+  const autoId = book ? book.id : generateAutoId("S", books);
+  const autoAuthorId = book ? book.authorId : generateAutoId("TG", authors);
+
   openModal({
     title: book ? "Sửa thông tin sách" : "Thêm sách mới",
-    initial: book || {
-      year: new Date().getFullYear(),
-      quantity: 1,
-    },
+    initial: book
+      ? { ...book, authorId: autoAuthorId }
+      : {
+          id: autoId,
+          authorId: autoAuthorId,
+          year: new Date().getFullYear(),
+          quantity: 1,
+        },
     fields: [
-      {
-        name: "id",
-        label: "Mã sách",
-        placeholder: "VD: S004",
-        readonly: !!book,
-      },
+      { name: "id", label: "Mã sách (Tự động)", readonly: true },
       { name: "name", label: "Tên sách" },
-      { name: "author", label: "Tác giả" },
+      { name: "authorId", label: "Mã tác giả (Tự động)", readonly: true },
+      { name: "author", label: "Tên tác giả" },
       { name: "publisher", label: "Nhà xuất bản" },
       {
         name: "year",
@@ -454,7 +574,7 @@ function openBookForm(book = null) {
       { name: "quantity", label: "Số lượng", type: "number", min: 0, step: 1 },
       { name: "category", label: "Thể loại" },
     ],
-    onSubmit: (data) => {
+    onSubmit: async (data) => {
       const item = {
         id: data.id.trim(),
         name: data.name.trim(),
@@ -470,22 +590,12 @@ function openBookForm(book = null) {
         return false;
       }
 
-      if (
-        !item.id ||
-        !item.name ||
-        !item.author ||
-        !item.publisher ||
-        !item.category
-      ) {
+      if (!item.id || !item.name || !item.author || !item.publisher || !item.category) {
         notify("Vui lòng điền đầy đủ thông tin.", false);
         return false;
       }
 
-      if (
-        !Number.isInteger(item.year) ||
-        item.year < 1000 ||
-        item.year > new Date().getFullYear()
-      ) {
+      if (!Number.isInteger(item.year) || item.year < 1000 || item.year > new Date().getFullYear()) {
         notify("Năm xuất bản không hợp lệ.", false);
         return false;
       }
@@ -506,21 +616,61 @@ function openBookForm(book = null) {
           notify(`Cần giữ ít nhất ${borrowed} cuốn đang được mượn.`, false);
           return false;
         }
-
-        const index = books.findIndex((x) => x.id === book.id);
-        if (index !== -1) books[index] = item;
-
-        notify("Đã cập nhật sách.");
-      } else {
-        books.push(item);
-        notify("Đã thêm sách thành công.");
       }
 
-      renderBooks();
-      renderLoans();
-      updateDashboard();
+      try {
+        const res = await fetch(API_BOOKS, {
+          method: book ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item),
+        });
+        const result = await res.json();
+
+        if (!result.success) {
+          notify(result.message || "Lỗi khi lưu sách vào MySQL!", false);
+          return false;
+        }
+
+        notify(book ? "Đã cập nhật sách vào MySQL." : "Đã thêm sách vào MySQL.");
+        await fetchBooks();
+        await fetchAuthors();
+        renderLoans();
+      } catch (err) {
+        console.error(err);
+        notify("Không kết nối được tới server Java!", false);
+        return false;
+      }
     },
   });
+
+  const authorInput = $("#modal-author");
+  const authorIdInput = $("#modal-authorId");
+
+  const syncAuthorId = () => {
+    const val = authorInput.value.trim().toLowerCase();
+    const foundAuthor = authors.find((a) => a.name.toLowerCase() === val);
+    const foundInBooks = books.find((b) => String(b.author || "").toLowerCase() === val);
+
+    if (foundAuthor) {
+      authorIdInput.value = foundAuthor.id;
+    } else if (foundInBooks && foundInBooks.authorId) {
+      authorIdInput.value = foundInBooks.authorId;
+    } else {
+      authorIdInput.value = generateAutoId("TG", authors);
+    }
+  };
+
+  authorInput?.addEventListener("input", syncAuthorId);
+
+  attachAutocomplete(
+    authorInput,
+    authors.map((a) => ({
+      id: a.name,
+      title: `Mã: ${a.id}`,
+      meta: "Đã có",
+    })),
+    `Tác giả mới (tự sinh mã ${generateAutoId("TG", authors)})`,
+  );
 }
 
 /* =====================================================
@@ -557,10 +707,11 @@ function renderReaders(keyword = $("#readerSearch")?.value || "") {
                 </tr>
             </thead>
             <tbody>
-                ${rows.length
-      ? rows
-        .map(
-          (reader) => `
+                ${
+                  rows.length
+                    ? rows
+                        .map(
+                          (reader) => `
                     <tr>
                         <td>${escapeHTML(reader.id)}</td>
                         <td>${escapeHTML(reader.name)}</td>
@@ -587,54 +738,58 @@ function renderReaders(keyword = $("#readerSearch")?.value || "") {
                         </td>
                     </tr>
                 `,
-        )
-        .join("")
-      : `
+                        )
+                        .join("")
+                    : `
                     <tr>
                         <td colspan="7" style="text-align:center;padding:25px">
                             Không có độc giả phù hợp.
                         </td>
                     </tr>
                 `
-    }
+                }
             </tbody>
         </table>
         </div>`;
 }
 
 function openReaderForm(reader = null) {
+  const autoId = reader ? reader.id : generateAutoId("DG", readers);
+
   openModal({
     title: reader ? "Sửa thông tin độc giả" : "Thêm độc giả mới",
-    initial: reader || {},
+    initial: reader || {
+      id: autoId,
+    },
     fields: [
       {
         name: "id",
-        label: "Mã độc giả",
-        placeholder: "VD: DG003",
-        readonly: !!reader,
+        label: "Mã độc giả (Tự động)",
+        readonly: true,
       },
       { name: "name", label: "Họ và tên" },
       { name: "birthday", label: "Ngày sinh", type: "date", max: today() },
-      { name: "gender", label: "Giới tính" },
+      {
+        name: "gender",
+        label: "Giới tính",
+        placeholder: "Chọn hoặc nhập giới tính...",
+      },
       { name: "phone", label: "Số điện thoại", type: "tel" },
-      { name: "type", label: "Loại độc giả" },
+      {
+        name: "type",
+        label: "Loại độc giả",
+        placeholder: "Chọn hoặc nhập loại độc giả...",
+      },
     ],
-    onSubmit: (data) => {
+    onSubmit: async (data) => {
       const item = {
         id: data.id.trim(),
         name: data.name.trim(),
         birthday: data.birthday,
-        gender: data.gender,
+        gender: data.gender.trim(),
         phone: data.phone.trim(),
         type: data.type.trim(),
       };
-
-      if (
-        readers.some((x) => x.id === item.id && (!reader || x.id !== reader.id))
-      ) {
-        notify("Mã độc giả đã tồn tại!", false);
-        return false;
-      }
 
       if (
         !item.id ||
@@ -648,37 +803,74 @@ function openReaderForm(reader = null) {
         return false;
       }
 
-      if (item.birthday > today()) {
-        notify("Ngày sinh không thể ở tương lai.", false);
+      try {
+        const res = await fetch(API_READERS, {
+          method: reader ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item),
+        });
+        const result = await res.json();
+
+        if (!result.success) {
+          notify(result.message || "Lỗi khi lưu độc giả vào MySQL!", false);
+          return false;
+        }
+
+        notify(reader ? "Đã cập nhật độc giả." : "Đã thêm độc giả vào MySQL.");
+        await fetchReaders();
+        renderLoans();
+      } catch (err) {
+        notify("Không kết nối được tới server Java!", false);
         return false;
       }
-
-      if (reader) {
-        const index = readers.findIndex((x) => x.id === reader.id);
-        if (index !== -1) readers[index] = item;
-      } else {
-        readers.push(item);
-      }
-
-      renderReaders();
-      renderLoans();
-      updateDashboard();
-
-      notify(reader ? "Đã cập nhật độc giả." : "Đã thêm độc giả.");
     },
   });
+
+  // Gắn gợi ý xổ xuống cho ô Giới tính
+  attachAutocomplete(
+    $("#modal-gender"),
+    [
+      { id: "Nam", title: "Giới tính nam" },
+      { id: "Nữ", title: "Giới tính nữ" },
+      { id: "Khác", title: "Giới tính khác" },
+    ],
+    "Không có gợi ý phù hợp",
+  );
+
+  // Gắn gợi ý xổ xuống cho ô Loại độc giả
+  attachAutocomplete(
+    $("#modal-type"),
+    [
+      { id: "Sinh viên", title: "Thẻ mượn cơ bản" },
+      { id: "Giảng viên", title: "Thẻ cán bộ / giảng viên" },
+      { id: "Học viên cao học", title: "Thẻ sau đại học" },
+      { id: "Khách ngoài", title: "Thẻ đọc tại chỗ" },
+    ],
+    "Không có gợi ý phù hợp",
+  );
 }
 
 /* =====================================================
-   8. QUẢN LÝ MƯỢN - TRẢ
+8. QUẢN LÝ MƯỢN - TRẢ
 ===================================================== */
 
 function renderLoans(keyword = $("#loanSearch")?.value || "") {
   const term = keyword.trim().toLowerCase();
+  const todayStr = today();
 
   const rows = loans.filter((loan) => {
-    const reader = readers.find((x) => x.id === loan.readerId);
+    // 1. Lọc theo 3 thẻ thống kê (Đã trả / Đang mượn / Quá hạn)
+    if (loanFilter === "returned" && loan.status !== "Đã trả") return false;
+    if (loanFilter === "active" && loan.status !== "Đang mượn") return false;
+    if (
+      loanFilter === "overdue" &&
+      !(loan.status === "Đang mượn" && loan.dueDate && loan.dueDate < todayStr)
+    ) {
+      return false;
+    }
 
+    // 2. Lọc theo từ khóa ô tìm kiếm
+    const reader = readers.find((x) => x.id === loan.readerId);
     return [loan.id, reader?.name, loan.status].some((value) =>
       String(value || "")
         .toLowerCase()
@@ -704,23 +896,24 @@ function renderLoans(keyword = $("#loanSearch")?.value || "") {
                 </tr>
             </thead>
             <tbody>
-                ${rows.length
-      ? rows
-        .map((loan) => {
-          const reader = readers.find(
-            (x) => x.id === loan.readerId,
-          );
+                ${
+                  rows.length
+                    ? rows
+                        .map((loan) => {
+                          const reader = readers.find(
+                            (x) => x.id === loan.readerId,
+                          );
 
-          const summary = loan.items
-            .map((item) => {
-              const book = books.find(
-                (x) => x.id === item.bookId,
-              );
-              return `${book ? book.name : item.bookId} × ${item.quantity}`;
-            })
-            .join(", ");
+                          const summary = loan.items
+                            .map((item) => {
+                              const book = books.find(
+                                (x) => x.id === item.bookId,
+                              );
+                              return `${book ? book.name : item.bookId} × ${item.quantity}`;
+                            })
+                            .join(", ");
 
-          return `
+                          return `
                         <tr>
                             <td>${escapeHTML(loan.id)}</td>
                             <td>${escapeHTML(reader?.name || loan.readerId)}</td>
@@ -729,31 +922,175 @@ function renderLoans(keyword = $("#loanSearch")?.value || "") {
                             <td>${escapeHTML(summary)}</td>
                             <td>${escapeHTML(loan.status)}</td>
                             <td>
-                                ${loan.status === "Đang mượn"
-              ? `
-                                    <button data-action="return-loan"
-                                        data-id="${escapeHTML(loan.id)}">Trả sách</button>
-                                `
-              : ""
-            }
+                                ${
+                                  loan.status === "Đang mượn"
+                                    ? `<button class="btn-edit"
+                                        data-action="return-loan"
+                                        data-id="${escapeHTML(loan.id)}"
+                                        title="Trả sách">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle">
+                                          <path d="M9 14L4 9l5-5"/>
+                                          <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/>
+                                        </svg>
+                                      </button>`
+                                    : ""
+                                }
                                 <button class="btn-delete"
                                     data-action="delete-loan"
-                                    data-id="${escapeHTML(loan.id)}">Xóa</button>
+                                    data-id="${escapeHTML(loan.id)}"
+                                    title="Xóa phiếu">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle">
+                                      <polyline points="3 6 5 6 21 6"/>
+                                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                      <line x1="10" y1="11" x2="10" y2="17"/>
+                                      <line x1="14" y1="11" x2="14" y2="17"/>
+                                    </svg>
+                                </button>
                             </td>
                         </tr>`;
-        })
-        .join("")
-      : `
+                        })
+                        .join("")
+                    : `
                     <tr>
                         <td colspan="7" style="text-align:center;padding:25px">
-                            Chưa có phiếu mượn.
+                            Không có phiếu mượn phù hợp.
                         </td>
                     </tr>
                 `
-    }
+                }
             </tbody>
         </table>
         </div>`;
+
+  // Cập nhật 3 thẻ thống kê ở tab Mượn - Trả
+  const returnedBooksCount = loans
+    .filter((l) => l.status === "Đã trả")
+    .reduce(
+      (sum, l) =>
+        sum + (l.items || []).reduce((s, i) => s + Number(i.quantity || 0), 0),
+      0,
+    );
+
+  const activeBooksCount = loans
+    .filter((l) => l.status === "Đang mượn")
+    .reduce(
+      (sum, l) =>
+        sum + (l.items || []).reduce((s, i) => s + Number(i.quantity || 0), 0),
+      0,
+    );
+
+  const overdueLoansCount = loans.filter(
+    (l) => l.status === "Đang mượn" && l.dueDate && l.dueDate < todayStr,
+  ).length;
+
+  if ($("#borrowCardReturned"))
+    $("#borrowCardReturned").textContent = returnedBooksCount;
+  if ($("#borrowCardBooks"))
+    $("#borrowCardBooks").textContent = activeBooksCount;
+  if ($("#borrowCardOverdue"))
+    $("#borrowCardOverdue").textContent = overdueLoansCount;
+}
+
+function attachAutocomplete(inputEl, items, emptyText) {
+  if (!inputEl) return;
+  inputEl.setAttribute("autocomplete", "off");
+
+  const dropdown = document.createElement("div");
+  dropdown.className = "autocomplete-dropdown";
+  document.body.appendChild(dropdown);
+
+  let activeIndex = -1;
+
+  const normalize = (str) =>
+    String(str || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
+  function updatePosition() {
+    if (!document.body.contains(inputEl)) {
+      dropdown.remove();
+      return;
+    }
+    const rect = inputEl.getBoundingClientRect();
+    dropdown.style.position = "fixed";
+    dropdown.style.top = rect.bottom + 4 + "px";
+    dropdown.style.left = rect.left + "px";
+    dropdown.style.width = rect.width + "px";
+    dropdown.style.zIndex = "30000";
+  }
+
+  function renderList(keyword = "") {
+    const q = normalize(keyword.trim());
+    const matched = items.filter(
+      (item) =>
+        normalize(item.id).includes(q) || normalize(item.title).includes(q),
+    );
+
+    activeIndex = -1;
+
+    if (!matched.length) {
+      dropdown.innerHTML = `<div class="autocomplete-empty">${emptyText}</div>`;
+    } else {
+      dropdown.innerHTML = matched
+        .slice(0, 8)
+        .map(
+          (item, idx) => `
+          <div class="autocomplete-item" data-index="${idx}" data-value="${escapeHTML(item.id)}">
+            <div class="ac-main">
+              <strong>${escapeHTML(item.id)}</strong>
+              <span>${escapeHTML(item.title)}</span>
+            </div>
+            ${item.meta ? `<small class="ac-meta">${escapeHTML(item.meta)}</small>` : ""}
+          </div>`,
+        )
+        .join("");
+    }
+    updatePosition();
+    dropdown.classList.add("show");
+  }
+
+  inputEl.addEventListener("focus", () => renderList(inputEl.value));
+  inputEl.addEventListener("click", () => renderList(inputEl.value));
+  inputEl.addEventListener("input", () => renderList(inputEl.value));
+
+  dropdown.addEventListener("mousedown", (e) => {
+    const itemEl = e.target.closest(".autocomplete-item");
+    if (!itemEl) return;
+    inputEl.value = itemEl.dataset.value;
+    inputEl.dispatchEvent(new Event("input"));
+    dropdown.classList.remove("show");
+  });
+
+  inputEl.addEventListener("keydown", (e) => {
+    const list = dropdown.querySelectorAll(".autocomplete-item");
+    if (!dropdown.classList.contains("show") || !list.length) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      activeIndex = (activeIndex + 1) % list.length;
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      activeIndex = (activeIndex - 1 + list.length) % list.length;
+    } else if (e.key === "Enter" && activeIndex >= 0) {
+      e.preventDefault();
+      inputEl.value = list[activeIndex].dataset.value;
+      dropdown.classList.remove("show");
+      return;
+    } else if (e.key === "Escape") {
+      dropdown.classList.remove("show");
+      return;
+    } else {
+      return;
+    }
+
+    list.forEach((el, i) => el.classList.toggle("active", i === activeIndex));
+    list[activeIndex]?.scrollIntoView({ block: "nearest" });
+  });
+
+  inputEl.addEventListener("blur", () => {
+    setTimeout(() => dropdown.classList.remove("show"), 150);
+  });
 }
 
 function openLoanForm() {
@@ -762,15 +1099,27 @@ function openLoanForm() {
     return;
   }
 
+  const autoLoanId = generateAutoId("PM", loans);
+
   openModal({
     title: "Lập phiếu mượn sách",
     initial: {
+      id: autoLoanId,
       borrowDate: today(),
-      dueDate: today(),
+      dueDate: addDays(today(), 14),
     },
     fields: [
-      { name: "readerId", label: "Mã độc giả", placeholder: "Nhập mã độc giả" },
-      { name: "bookId", label: "Mã sách", placeholder: "Nhập mã sách" },
+      { name: "id", label: "Mã phiếu mượn (Tự động)", readonly: true },
+      {
+        name: "readerId",
+        label: "Mã độc giả",
+        placeholder: "Chọn hoặc nhập mã / tên độc giả...",
+      },
+      {
+        name: "bookId",
+        label: "Mã sách",
+        placeholder: "Chọn hoặc nhập mã / tên sách...",
+      },
       {
         name: "quantity",
         label: "Số lượng mượn",
@@ -782,75 +1131,116 @@ function openLoanForm() {
       { name: "borrowDate", label: "Ngày mượn", type: "date", max: today() },
       { name: "dueDate", label: "Hạn trả", type: "date" },
     ],
-    onSubmit: (data) => {
-      const reader = readers.find((x) => x.id === data.readerId.trim());
-      const book = books.find((x) => x.id === data.bookId.trim());
-      const quantity = Number(data.quantity);
-
-      if (!reader || !book) {
-        notify("Mã độc giả hoặc mã sách không tồn tại.", false);
-        return false;
-      }
-
-      if (
-        !Number.isInteger(quantity) ||
-        quantity < 1 ||
-        quantity > book.quantity
-      ) {
-        notify(
-          `Số lượng mượn không hợp lệ. Sách còn ${book.quantity} cuốn.`,
-          false,
-        );
-        return false;
-      }
-
-      if (data.borrowDate > today() || data.dueDate < data.borrowDate) {
-        notify("Ngày mượn hoặc hạn trả không hợp lệ.", false);
-        return false;
-      }
-
-      const id = "PM" + String(nextLoanNumber++).padStart(3, "0");
-
-      loans.push({
-        id,
-        readerId: reader.id,
+    onSubmit: async (data) => {
+      const payload = {
+        id: data.id.trim(),
+        readerId: data.readerId.trim(),
+        bookId: data.bookId.trim(),
+        quantity: Number(data.quantity),
         borrowDate: data.borrowDate,
         dueDate: data.dueDate,
-        returnDate: "",
-        status: "Đang mượn",
-        items: [{ bookId: book.id, quantity }],
-      });
+      };
 
-      book.quantity -= quantity;
+      if (payload.dueDate < payload.borrowDate) {
+        notify("Hạn trả không được sớm hơn ngày mượn.", false);
+        return false;
+      }
 
-      renderBooks();
-      renderLoans();
-      updateDashboard();
-      notify("Đã lập phiếu " + id + ".");
+      try {
+        const res = await fetch(API_LOANS, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const result = await res.json();
+
+        if (!result.success) {
+          notify(result.message || "Không thể lập phiếu mượn!", false);
+          return false;
+        }
+
+        notify("Đã lập phiếu mượn " + payload.id + ".");
+        await fetchBooks();
+        await fetchLoans();
+      } catch (err) {
+        notify("Không kết nối được tới server Java!", false);
+        return false;
+      }
     },
   });
+
+  attachAutocomplete(
+    $("#modal-readerId"),
+    readers.map((r) => ({
+      id: r.id,
+      title: r.name,
+      meta: r.phone || r.type || "Độc giả",
+    })),
+    "Không tìm thấy độc giả phù hợp",
+  );
+
+  attachAutocomplete(
+    $("#modal-bookId"),
+    books
+      .filter((b) => Number(b.quantity) > 0)
+      .map((b) => ({
+        id: b.id,
+        title: b.name,
+        meta: `Còn: ${b.quantity} cuốn`,
+      })),
+    "Không tìm thấy sách còn trong kho",
+  );
 }
 
-function returnLoan(id) {
+async function returnLoan(id) {
   const loan = loans.find((x) => x.id === id);
 
   if (!loan || loan.status !== "Đang mượn") return;
 
   if (!confirm("Xác nhận trả sách của phiếu " + id + "?")) return;
 
-  loan.status = "Đã trả";
-  loan.returnDate = today();
+  try {
+    const res = await fetch(API_LOANS, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, returnDate: today() }),
+    });
 
-  loan.items.forEach((item) => {
-    const book = books.find((x) => x.id === item.bookId);
-    if (book) book.quantity += item.quantity;
-  });
+    const result = await res.json();
 
-  renderBooks();
-  renderLoans();
-  updateDashboard();
+    if (result.success) {
+      notify("Đã ghi nhận trả sách.");
+      await fetchBooks();
+      await fetchLoans();
+    } else {
+      notify(result.message || "Lỗi khi trả sách!", false);
+    }
+  } catch (err) {
+    console.error(err);
+    notify("Không kết nối được tới server Java!", false);
+  }
+}
 
-  notify("Đã ghi nhận trả sách.");
+async function deleteLoan(id) {
+  if (!confirm("Bạn có chắc muốn xóa phiếu mượn " + id + "?")) return;
+
+  try {
+    const res = await fetch(`${API_LOANS}?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+    const result = await res.json();
+
+    if (result.success) {
+      notify("Đã xóa phiếu mượn.");
+      await fetchBooks();
+      await fetchLoans();
+    } else {
+      notify(result.message || "Lỗi khi xóa phiếu mượn!", false);
+    }
+  } catch (err) {
+    console.error(err);
+    notify("Không kết nối được tới server Java!", false);
+  }
 }
 
 /* =====================================================
@@ -886,13 +1276,18 @@ document.addEventListener("click", (event) => {
 
     if (!confirm("Xóa sách " + book.name + "?")) return;
 
-    books = books.filter((x) => x.id !== id);
-
-    renderBooks();
-    renderLoans();
-    updateDashboard();
-
-    notify("Đã xóa sách.");
+    fetch(`${API_BOOKS}?id=${encodeURIComponent(id)}`, { method: "DELETE" })
+      .then((res) => res.json())
+      .then((result) => {
+        if (result.success) {
+          notify("Đã xóa sách khỏi MySQL.");
+          fetchBooks();
+          renderLoans();
+        } else {
+          notify(result.message || "Không thể xóa sách!", false);
+        }
+      })
+      .catch(() => notify("Không kết nối được tới server Java!", false));
   }
 
   if (action === "edit-reader") {
@@ -912,13 +1307,18 @@ document.addEventListener("click", (event) => {
 
     if (!confirm("Xóa độc giả này?")) return;
 
-    readers = readers.filter((x) => x.id !== id);
-
-    renderReaders();
-    renderLoans();
-    updateDashboard();
-
-    notify("Đã xóa độc giả.");
+    fetch(`${API_READERS}?id=${encodeURIComponent(id)}`, { method: "DELETE" })
+      .then((res) => res.json())
+      .then((result) => {
+        if (result.success) {
+          notify("Đã xóa độc giả khỏi MySQL.");
+          fetchReaders();
+          renderLoans();
+        } else {
+          notify(result.message || "Không thể xóa độc giả!", false);
+        }
+      })
+      .catch(() => notify("Không kết nối được tới server Java!", false));
   }
 
   if (action === "return-loan") {
@@ -926,22 +1326,18 @@ document.addEventListener("click", (event) => {
   }
 
   if (action === "delete-loan") {
-    const loan = loans.find((x) => x.id === id);
-    if (!loan) return;
-
-    if (loan.status === "Đang mượn") {
-      notify("Hãy ghi nhận trả sách trước khi xóa phiếu.", false);
-      return;
-    }
-
     if (!confirm("Xóa phiếu " + id + "?")) return;
-
-    loans = loans.filter((x) => x.id !== id);
-
-    renderLoans();
-    updateDashboard();
-
-    notify("Đã xóa phiếu.");
+    fetch(`${API_LOANS}?id=${encodeURIComponent(id)}`, { method: "DELETE" })
+      .then((res) => res.json())
+      .then((result) => {
+        if (result.success) {
+          notify("Đã xóa phiếu mượn.");
+          fetchLoans();
+        } else {
+          notify(result.message || "Không thể xóa phiếu!", false);
+        }
+      })
+      .catch(() => notify("Không kết nối được tới server Java!", false));
   }
 });
 
@@ -957,38 +1353,42 @@ function renderSearch() {
 
   const term = input.value.trim().toLowerCase();
 
+  // SỬA DÒNG NÀY: Thêm book.authorId vào bộ lọc
   const bookResults = books.filter((book) =>
-    [book.id, book.name, book.author].some((value) =>
-      String(value).toLowerCase().includes(term),
+    [book.id, book.name, book.author, book.authorId].some((value) =>
+      String(value || "").toLowerCase().includes(term),
     ),
   );
 
   const readerResults = readers.filter((reader) =>
     [reader.id, reader.name, reader.phone].some((value) =>
-      String(value).toLowerCase().includes(term),
+      String(value || "").toLowerCase().includes(term),
     ),
   );
 
   results.innerHTML = `
         <h3>Sách</h3>
-        ${bookResults
-      .map(
-        (book) => `
-            <p>${escapeHTML(book.id)} — ${escapeHTML(book.name)} — ${escapeHTML(book.author)}</p>
+        ${
+          bookResults
+            .map(
+              (book) => `
+            <!-- SỬA DÒNG NÀY: Hiện kèm (TG001) ở kết quả tra cứu -->
+            <p>${escapeHTML(book.id)} — ${escapeHTML(book.name)} — ${escapeHTML(book.author)} (${escapeHTML(book.authorId || "")})</p>
         `,
-      )
-      .join("") || "<p>Không tìm thấy sách.</p>"
-    }
+            )
+            .join("") || "<p>Không tìm thấy sách.</p>"
+        }
 
         <h3>Độc giả</h3>
-        ${readerResults
-      .map(
-        (reader) => `
+        ${
+          readerResults
+            .map(
+              (reader) => `
             <p>${escapeHTML(reader.id)} — ${escapeHTML(reader.name)} — ${escapeHTML(reader.phone)}</p>
         `,
-      )
-      .join("") || "<p>Không tìm thấy độc giả.</p>"
-    }
+            )
+            .join("") || "<p>Không tìm thấy độc giả.</p>"
+        }
     `;
 }
 
@@ -1111,9 +1511,102 @@ function setupTopSearch() {
     }
   });
 }
+/* =====================================================
+   13. TÀI KHOẢN VÀ CÀI ĐẶT
+===================================================== */
+function setupAccountAndSettings() {
+  const defaultAccount = {
+    username: "admin",
+    password: "123456",
+    fullName: "Admin",
+    email: "admin@sachtot.edu.vn",
+    role: "Quản trị viên thư viện",
+  };
+
+  const defaultSettings = {
+    libraryName: "Sách tốt",
+    defaultDays: 14,
+    maxBooks: 5,
+    finePerDay: 5000,
+  };
+
+  let account = JSON.parse(localStorage.getItem("lib_account")) || defaultAccount;
+  let settings = JSON.parse(localStorage.getItem("lib_settings")) || defaultSettings;
+
+  function renderAccountAndSettings() {
+    if ($("#adminButton span")) $("#adminButton span").textContent = account.fullName;
+    if ($(".top-logo span")) $(".top-logo span").textContent = settings.libraryName;
+
+    if ($("#accUsername")) $("#accUsername").value = account.username;
+    if ($("#accFullName")) $("#accFullName").value = account.fullName;
+    if ($("#accEmail")) $("#accEmail").value = account.email;
+    if ($("#accRole")) $("#accRole").value = account.role;
+
+    if ($("#setLibraryName")) $("#setLibraryName").value = settings.libraryName;
+    if ($("#setDefaultDays")) $("#setDefaultDays").value = settings.defaultDays;
+    if ($("#setMaxBooks")) $("#setMaxBooks").value = settings.maxBooks;
+    if ($("#setFinePerDay")) $("#setFinePerDay").value = settings.finePerDay;
+  }
+
+  renderAccountAndSettings();
+
+  // Lưu thông tin hồ sơ
+  $("#accountForm")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    account.fullName = $("#accFullName").value.trim();
+    account.email = $("#accEmail").value.trim();
+    localStorage.setItem("lib_account", JSON.stringify(account));
+    renderAccountAndSettings();
+    notify("Đã lưu thông tin tài khoản.");
+  });
+
+  // Đổi mật khẩu
+  $("#passwordForm")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const oldPass = $("#oldPassword").value;
+    const newPass = $("#newPassword").value;
+    const confirmPass = $("#confirmPassword").value;
+
+    if (oldPass !== account.password) {
+      notify("Mật khẩu hiện tại không đúng!", false);
+      return;
+    }
+    if (newPass !== confirmPass) {
+      notify("Xác nhận mật khẩu mới không khớp!", false);
+      return;
+    }
+
+    account.password = newPass;
+    localStorage.setItem("lib_account", JSON.stringify(account));
+    $("#passwordForm").reset();
+    notify("Đã đổi mật khẩu thành công!");
+  });
+
+  // Lưu cài đặt hệ thống
+  $("#settingsForm")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    settings = {
+      libraryName: $("#setLibraryName").value.trim(),
+      defaultDays: Number($("#setDefaultDays").value),
+      maxBooks: Number($("#setMaxBooks").value),
+      finePerDay: Number($("#setFinePerDay").value),
+    };
+    localStorage.setItem("lib_settings", JSON.stringify(settings));
+    renderAccountAndSettings();
+    notify("Đã lưu cấu hình hệ thống.");
+  });
+
+  // Đăng xuất sang trang login.html riêng
+  $("#logoutButton")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (!confirm("Bạn có chắc muốn đăng xuất?")) return;
+    sessionStorage.removeItem("lib_logged_in");
+    window.location.href = "login.html";
+  });
+}
 
 /* =====================================================
-   13. KHỞI ĐỘNG VÀ GẮN SỰ KIỆN
+   14. KHỞI ĐỘNG VÀ GẮN SỰ KIỆN
 ===================================================== */
 
 function startLibrary() {
@@ -1131,8 +1624,20 @@ function startLibrary() {
       event.preventDefault();
 
       const pageName = item.dataset.pageLink;
+
       if (pageTitles[pageName]) {
         showPage(pageName);
+
+        if (pageName === "borrow") {
+          // Hiển thị lại toàn bộ phiếu mượn
+          loanFilter = "all";
+
+          $$("[data-loan-filter]").forEach((card) => {
+            card.classList.remove("active-filter");
+          });
+
+          renderLoans();
+        }
       }
     });
   });
@@ -1154,6 +1659,32 @@ function startLibrary() {
   $("#loanSearch")?.addEventListener("input", (event) => {
     renderLoans(event.target.value);
   });
+
+  // Lọc danh sách khi nhấn vào các ô thống kê
+  // Lọc danh sách khi nhấn vào các ô thống kê
+$$("[data-loan-filter]").forEach((card) => {
+  card.addEventListener("click", () => {
+
+    const selectedFilter = card.dataset.loanFilter;
+
+    // Bấm lại thẻ đang chọn thì hiển thị tất cả
+    if (loanFilter === selectedFilter) {
+      loanFilter = "all";
+    } else {
+      loanFilter = selectedFilter;
+    }
+
+    // Cập nhật trạng thái thẻ được chọn
+    $$("[data-loan-filter]").forEach((item) => {
+      item.classList.toggle(
+        "active-filter",
+        item.dataset.loanFilter === loanFilter
+      );
+    });
+
+    renderLoans();
+  });
+});
 
   $("#searchInput")?.addEventListener("input", renderSearch);
 
@@ -1182,9 +1713,12 @@ function startLibrary() {
   setupAdminDropdown();
 
   // Khởi tạo dữ liệu
-  renderBooks();
-  renderReaders();
-  renderLoans();
+  fetchBooks();
+  fetchReaders();
+  fetchLoans();
+  fetchAuthors();
+  fetchLoanDetails();
+  setupAccountAndSettings();
   updateDashboard();
 }
 
