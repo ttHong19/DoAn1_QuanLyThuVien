@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th10 12, 2026 lúc 11:46 AM
+-- Thời gian đã tạo: Th10 19, 2026 lúc 05:28 PM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -35,6 +35,14 @@ CREATE TABLE `chitietmuon` (
   `TrangThai` varchar(30) NOT NULL DEFAULT 'Đang mượn'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `chitietmuon`
+--
+
+INSERT INTO `chitietmuon` (`MaPhieu`, `MaSach`, `SoLuong`, `NgayTra`, `TrangThai`) VALUES
+('PM-20261117-001', 'S-20261016-003', 1, NULL, 'Đang mượn'),
+('PM-20261118-001', 'S-20261016-001', 2, NULL, 'Đang mượn');
+
 -- --------------------------------------------------------
 
 --
@@ -55,8 +63,9 @@ CREATE TABLE `docgia` (
 --
 
 INSERT INTO `docgia` (`MaDocGia`, `HoTen`, `NgaySinh`, `GioiTinh`, `SDT`, `LoaiDocGia`) VALUES
-('DG001', 'Nguyễn Văn An', '2005-05-12', 'Nam', '0900000001', 'Sinh viên'),
-('DG002', 'Trần Thị Mai', '2005-08-20', 'Nữ', '0900000002', 'Sinh viên');
+('DG-20261016-001', 'Nguyễn Văn An', '2005-05-12', 'Nam', '0900000001', 'Sinh viên'),
+('DG-20261016-002', 'Trần Thị Mai', '2005-08-20', 'Nữ', '0900000002', 'Sinh viên'),
+('DG-20261117-001', 'Trần Hồng', '2006-09-01', 'Nữ', '0123456789', 'Sinh Viên');
 
 -- --------------------------------------------------------
 
@@ -71,6 +80,14 @@ CREATE TABLE `phieumuon` (
   `HanTra` date NOT NULL,
   `TrangThai` varchar(30) NOT NULL DEFAULT 'Đang mượn'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `phieumuon`
+--
+
+INSERT INTO `phieumuon` (`MaPhieu`, `MaDocGia`, `NgayMuon`, `HanTra`, `TrangThai`) VALUES
+('PM-20261117-001', 'DG-20261117-001', '2026-11-17', '2026-12-01', 'Đang mượn'),
+('PM-20261118-001', 'DG-20261016-001', '2026-11-18', '2026-12-02', 'Đang mượn');
 
 -- --------------------------------------------------------
 
@@ -93,9 +110,9 @@ CREATE TABLE `sach` (
 --
 
 INSERT INTO `sach` (`MaSach`, `TenSach`, `MaTacGia`, `NXB`, `NamXB`, `TheLoai`, `SoLuong`) VALUES
-('S001', 'Mắt biếc', 'TG001', 'Nhà xuất bản Trẻ', 1990, 'Tiểu thuyết', 10),
-('S002', 'Lão Hạc', 'TG002', 'Nhà xuất bản Văn học', 1943, 'Truyện ngắn', 8),
-('S003', 'Harry Potter và Hòn đá Phù thủy', 'TG003', 'Bloomsbury', 1997, 'Fantasy', 6);
+('S-20261016-001', 'Mắt biếc', 'TG-20261016-001', 'Nhà xuất bản Trẻ', 1990, 'Tiểu thuyết', 8),
+('S-20261016-002', 'Lão Hạc', 'TG-20261016-002', 'Nhà xuất bản Văn học', 1943, 'Truyện ngắn', 8),
+('S-20261016-003', 'Harry Potter và Hòn đá Phù thủy', 'TG-20261016-003', 'Bloomsbury', 1997, 'Fantasy', 5);
 
 -- --------------------------------------------------------
 
@@ -113,9 +130,9 @@ CREATE TABLE `tacgia` (
 --
 
 INSERT INTO `tacgia` (`MaTacGia`, `TenTacGia`) VALUES
-('TG001', 'Nguyễn Nhật Ánh'),
-('TG002', 'Nam Cao'),
-('TG003', 'J. K. Rowling');
+('TG-20261016-001', 'Nguyễn Nhật Ánh'),
+('TG-20261016-002', 'Nam Cao'),
+('TG-20261016-003', 'J. K. Rowling');
 
 --
 -- Chỉ mục cho các bảng đã đổ
