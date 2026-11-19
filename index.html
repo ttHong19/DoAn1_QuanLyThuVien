@@ -6,11 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý thư viện</title>
 
-    <link rel="icon" type="image/png" sizes="32x32" href="./LOGO/icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon.png">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-    <link rel="stylesheet" href="./frontend/style.css">
+    <script>
+        if (sessionStorage.getItem("lib_logged_in") !== "true") {
+            window.location.replace("login.html");
+        }
+    </script>
+    
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -19,7 +25,7 @@
         <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="logo">
-                <img src="./LOGO/H_logo.png" alt="Logo thư viện">
+                <img src="H_logo.png" alt="Logo thư viện">
             </div>
 
             <nav class="menu">
@@ -87,7 +93,7 @@
                 </div>
 
                 <div class="top-logo">
-                    <img src="./LOGO/Favicion.png" alt="Logo thư viện">
+                    <img src="Favicion.png" alt="Logo thư viện">
                     <span>Sách tốt</span>
                 </div>
 
@@ -106,19 +112,19 @@
                         <i class="fa-solid fa-chevron-down"></i>
 
                         <div class="admin-dropdown" id="adminDropdown">
-                            <a href="#">
+                            <a href="#" data-page-link="account">
                                 <i class="fa-solid fa-user"></i>
                                 Thông tin tài khoản
                             </a>
 
-                            <a href="#">
+                            <a href="#" data-page-link="settings">
                                 <i class="fa-solid fa-gear"></i>
                                 Cài đặt
                             </a>
 
                             <div class="dropdown-line"></div>
 
-                            <a href="#" class="logout">
+                            <a href="login.html" class="logout" id="logoutButton">
                                 <i class="fa-solid fa-right-from-bracket"></i>
                                 Đăng xuất
                             </a>
@@ -205,8 +211,8 @@
                         <div class="panel loan-panel">
                             <div class="panel-header">
                                 <h2>
-                                    <i class="fa-solid fa-book-open"></i>
-                                    SÁCH ĐANG ĐƯỢC MƯỢN
+                                    <i class="fa-solid fa-list-check"></i>
+                                    CHI TIẾT MƯỢN SÁCH
                                 </h2>
 
                                 <a href="#" data-page-link="borrow">
@@ -215,15 +221,15 @@
                                 </a>
                             </div>
 
-                            <div class="table-wrapper">
+                            <div class="table-wrapper" style="max-height: 340px; overflow-y: auto;">
                                 <table>
-                                    <thead>
+                                    <thead style="position: sticky; top: 0; z-index: 2;">
                                         <tr>
+                                            <th>Mã phiếu</th>
                                             <th>Mã sách</th>
                                             <th>Tên sách</th>
-                                            <th>Độc giả</th>
-                                            <th>Ngày mượn</th>
-                                            <th>Hạn trả</th>
+                                            <th>Số lượng</th>
+                                            <th>Ngày trả</th>
                                             <th>Trạng thái</th>
                                         </tr>
                                     </thead>
@@ -236,7 +242,7 @@
                                                         <i class="fa-solid fa-box-open"></i>
                                                     </div>
                                                     <p>
-                                                        Hiện tại không có sách nào đang được mượn.
+                                                        Hiện tại chưa có dữ liệu chi tiết mượn.
                                                     </p>
                                                 </div>
                                             </td>
@@ -402,15 +408,15 @@
                     </div>
 
                     <div class="borrow-cards">
-                        <div class="borrow-info blue-border">
-                            <i class="fa-solid fa-file-circle-plus"></i>
+                        <div class="borrow-info purple-border" data-loan-filter="returned" style="cursor: pointer;">
+                            <i class="fa-solid fa-book-bookmark"></i>
                             <div>
-                                <strong id="borrowCardLoans">0</strong>
-                                <span>Phiếu mượn</span>
+                                <strong id="borrowCardReturned">0</strong>
+                                <span>Sách đã trả</span>
                             </div>
                         </div>
 
-                        <div class="borrow-info orange-border">
+                        <div class="borrow-info orange-border" data-loan-filter="active" style="cursor: pointer;">
                             <i class="fa-solid fa-book"></i>
                             <div>
                                 <strong id="borrowCardBooks">0</strong>
@@ -418,7 +424,7 @@
                             </div>
                         </div>
 
-                        <div class="borrow-info red-border">
+                        <div class="borrow-info red-border" data-loan-filter="overdue" style="cursor: pointer;">
                             <i class="fa-solid fa-clock"></i>
                             <div>
                                 <strong id="borrowCardOverdue">0</strong>
@@ -501,6 +507,111 @@
                     </div>
                 </div>
 
+<!-- THÔNG TIN TÀI KHOẢN -->
+                <div class="page" id="page-account">
+                    <div class="page-heading">
+                        <div class="heading-icon blue-icon">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </div>
+                        <div>
+                            <h1>Thông tin tài khoản</h1>
+                            <p>Quản lý hồ sơ thủ thư và đổi mật khẩu đăng nhập.</p>
+                        </div>
+                    </div>
+
+                    <div class="middle-grid">
+                        <div class="panel" style="padding: 22px;">
+                            <div class="panel-header" style="padding: 0 0 14px; margin-bottom: 18px;">
+                                <h2><i class="fa-solid fa-id-card"></i> HỒ SƠ QUẢN TRỊ VIÊN</h2>
+                            </div>
+                            <form id="accountForm" class="settings-form">
+                                <div class="form-row">
+                                    <label>Tên đăng nhập</label>
+                                    <input type="text" id="accUsername" readonly style="background:#f4f7fb">
+                                </div>
+                                <div class="form-row">
+                                    <label>Họ và tên hiển thị</label>
+                                    <input type="text" id="accFullName" required>
+                                </div>
+                                <div class="form-row">
+                                    <label>Email liên hệ</label>
+                                    <input type="email" id="accEmail" required>
+                                </div>
+                                <div class="form-row">
+                                    <label>Vai trò</label>
+                                    <input type="text" id="accRole" readonly style="background:#f4f7fb">
+                                </div>
+                                <button type="submit" class="btn-primary" style="margin-top: 8px; width: fit-content;">
+                                    <i class="fa-solid fa-floppy-disk"></i> Lưu thông tin
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="panel" style="padding: 22px;">
+                            <div class="panel-header" style="padding: 0 0 14px; margin-bottom: 18px;">
+                                <h2><i class="fa-solid fa-key"></i> ĐỔI MẬT KHẨU</h2>
+                            </div>
+                            <form id="passwordForm" class="settings-form">
+                                <div class="form-row">
+                                    <label>Mật khẩu hiện tại</label>
+                                    <input type="password" id="oldPassword" required>
+                                </div>
+                                <div class="form-row">
+                                    <label>Mật khẩu mới</label>
+                                    <input type="password" id="newPassword" minlength="4" required>
+                                </div>
+                                <div class="form-row">
+                                    <label>Xác nhận mật khẩu mới</label>
+                                    <input type="password" id="confirmPassword" minlength="4" required>
+                                </div>
+                                <button type="submit" class="btn-primary green-button" style="margin-top: 8px; width: fit-content;">
+                                    <i class="fa-solid fa-shield-halved"></i> Cập nhật mật khẩu
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CÀI ĐẶT HỆ THỐNG -->
+                <div class="page" id="page-settings">
+                    <div class="page-heading">
+                        <div class="heading-icon purple-icon">
+                            <i class="fa-solid fa-gear"></i>
+                        </div>
+                        <div>
+                            <h1>Cài đặt hệ thống</h1>
+                            <p>Thiết lập quy định mượn trả và thông tin thư viện.</p>
+                        </div>
+                    </div>
+
+                    <div class="panel" style="padding: 24px; max-width: 680px;">
+                        <div class="panel-header" style="padding: 0 0 14px; margin-bottom: 18px;">
+                            <h2><i class="fa-solid fa-sliders"></i> CẤU HÌNH CHUNG</h2>
+                        </div>
+                        <form id="settingsForm" class="settings-form">
+                            <div class="form-row">
+                                <label>Tên thư viện hiển thị</label>
+                                <input type="text" id="setLibraryName" required>
+                            </div>
+                            <div class="form-row">
+                                <label>Số ngày mượn sách mặc định (ngày)</label>
+                                <input type="number" id="setDefaultDays" min="1" max="90" required>
+                            </div>
+                            <div class="form-row">
+                                <label>Số sách tối đa mỗi lần mượn (cuốn)</label>
+                                <input type="number" id="setMaxBooks" min="1" max="20" required>
+                            </div>
+                            <div class="form-row">
+                                <label>Phí phạt trả trễ mỗi ngày (VNĐ)</label>
+                                <input type="number" id="setFinePerDay" min="0" step="1000" required>
+                            </div>
+                            <button type="submit" class="btn-primary" style="margin-top: 10px; width: fit-content;">
+                                <i class="fa-solid fa-check"></i> Lưu cấu hình
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- FOOTER -->
                 <footer>
                     Hệ thống quản lý thư viện • Đồ án 1
@@ -510,7 +621,7 @@
         </main>
     </div>
 
-    <script src="./frontend/script.js"></script>
+    <script src="script.js"></script>
 </body>
 
 </html>
