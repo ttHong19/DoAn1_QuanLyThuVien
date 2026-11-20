@@ -25,7 +25,7 @@ const BASE_API =
   window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1"
     ? "http://localhost:8080"
-    : "https://waters-polo-entries-health.trycloudflare.com";
+    : " https://mercy-urls-stopped-blue.trycloudflare.com";
 
 const API_BOOKS = `${BASE_API}/api/books`;
 const API_READERS = `${BASE_API}/api/readers`;
